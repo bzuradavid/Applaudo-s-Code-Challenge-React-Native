@@ -117,11 +117,9 @@ const Movie = ({ navigation, data, name }) => (
 );
 
 function Section ({ navigation, title, movies }) { 
-
   const renderMovie = ({ item }) => (
-    <Movie data={item} name={item.name} navigation={navigation} />
+    <Movie data={item} name={item.attributes.canonicalTitle} navigation={navigation} />
   );
-
   return (
     <View style={styles.section}>
       <Text style={styles.title}>{title}</Text>
@@ -136,48 +134,76 @@ function Section ({ navigation, title, movies }) {
 }
 
 function HomeScreen({ navigation }) {
-
-  let [responseData, setResponseData] = React.useState('');
+  let [loadingData, setLoadingData] = React.useState(true);
+  let [fetchUrl, setFetchUrl] = React.useState("https://kitsu.io/api/edge/anime");
+  let [responseData, setResponseData] = React.useState([]);
+  let [count, setCount] = React.useState(0);
   const fetchData = React.useCallback(() => {
-    axios({
-      "method": "GET",
-      "url": "https://kitsu.io/api/edge/anime",
-      "headers": {
-        "Accept": "application/vnd.api+json",
-        "Content-Type": "application/vnd.api+json"
-      }
-    })
-    .then((response) => {
-      console.log(response.data)
-      setResponseData(response.data)
-    })
-    .catch((error) => {
-      console.log(error)
-    })
+    const resultArray = []
+    axios.get(fetchUrl).then((response) => {
+      resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+      axios.get(response.data.links.next).then((response) => {
+        resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+        axios.get(response.data.links.next).then((response) => {
+          resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+          axios.get(response.data.links.next).then((response) => {
+            resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+            axios.get(response.data.links.next).then((response) => {
+              resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+              axios.get(response.data.links.next).then((response) => {
+                resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+                axios.get(response.data.links.next).then((response) => {
+                  resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+                  axios.get(response.data.links.next).then((response) => {
+                    resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+                    axios.get(response.data.links.next).then((response) => {
+                      resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+                      axios.get(response.data.links.next).then((response) => {
+                        resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+                        console.log(resultArray)
+                        setResponseData(resultArray)
+                        setLoadingData(false)
+                      }).catch((error) => { console.log(error)})
+                    }).catch((error) => { console.log(error)})
+                  }).catch((error) => { console.log(error)})
+                }).catch((error) => { console.log(error)})
+              }).catch((error) => { console.log(error)})
+            }).catch((error) => { console.log(error)})
+          }).catch((error) => { console.log(error)})
+        }).catch((error) => { console.log(error)})
+      }).catch((error) => { console.log(error)})
+    }).catch((error) => { console.log(error)})
   }, [])
   React.useEffect(() => {
-    fetchData()
+      fetchData()
   }, [fetchData])
 
   const renderSection = ({ item }) => (
-    <Section title={item.title} movies={item.movies} navigation={navigation} />
+    <Section title={item.name} movies={item.movies} navigation={navigation} />
   );
-
   return (
     <Container style={{ backgroundColor: '#000', padding: 10}}>
       <View style={{ marginHorizontal: 20 }}>
         <Item>
           <Icon active name='md-search' style={{ color: '#fff'}} />
-          <Input placeholder='Search' style={{ color: '#fff'}} />
+          <Input placeholder='Search' placeholderTextColor='#fff' style={{ color: '#fff'}} />
           <Icon active name='md-close' style={{ color: '#fff'}} />
         </Item>
       </View>
-      <FlatList
-        style={{ marginTop: 30 }}
-        data={SECTIONS}
-        renderItem={renderSection}
-        keyExtractor={item => item.id}
-      />
+
+      {loadingData ?
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ color: '#FFF' }}>Obteniendo resultados...</Text>
+        </View>
+      :
+        <FlatList
+          style={{ marginTop: 30 }}
+          data={responseData}
+          renderItem={renderSection}
+          keyExtractor={item => item.id}
+        />
+      }
+
     </Container>
   );
 }
