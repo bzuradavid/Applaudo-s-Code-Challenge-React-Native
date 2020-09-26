@@ -1,118 +1,15 @@
 import * as React from 'react';
-import { Button, View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
-import { Container, Header, Content, Item, Input, Icon } from 'native-base';
+import { Button, View, Text, FlatList, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { Container, Header, Content, Item, Input, Icon, Spinner } from 'native-base';
 import axios from 'axios';
 
-const SECTIONS = [
-  {
-    id: 'bd7acbea-c1b1-46c2-aed5-3ad53abb28ba',
-    title: 'Section 1',
-    movies: [
-      {
-        id: '283765',
-        name: "Movie 1",
-        description: "VERY COOL MOVIE"
-      },
-      {
-        id: '28376852',
-        name: "Movie 2",
-        description: "VERY COOL MOVIE"
-      },
-      {
-        id: '238764827635',
-        name: "Movie 3",
-        description: "VERY COOL MOVIE"
-      },
-      {
-        id: '24685774765',
-        name: "Movie 4",
-        description: "VERY COOL MOVIE"
-      },
-    ]
-  },
-  {
-    id: '3ac68afc-c605-48d3-a4f8-fbd91aa97f63',
-    title: 'Section 2',
-    movies: [
-      {
-        id: '6573548',
-        name: "Movie 1",
-        description: "VERY COOL MOVIE"
-      },
-      {
-        id: '3846856',
-        name: "Movie 2",
-        description: "VERY COOL MOVIE"
-      },
-      {
-        id: '364865',
-        name: "Movie 3",
-        description: "VERY COOL MOVIE"
-      },
-      {
-        id: '37486856',
-        name: "Movie 4",
-        description: "VERY COOL MOVIE"
-      },
-    ]
-  },
-  {
-    id: '58694a0f-3da1-471f-bd96-145571e29d72',
-    title: 'Section 3',
-    movies: [
-      {
-        id: '3974865',
-        name: "Movie 1",
-        description: "VERY COOL MOVIE"
-      },
-      {
-        id: '384687',
-        name: "Movie 2",
-        description: "VERY COOL MOVIE"
-      },
-      {
-        id: '2985736',
-        name: "Movie 3",
-        description: "VERY COOL MOVIE"
-      },
-      {
-        id: '374865',
-        name: "Movie 4",
-        description: "VERY COOL MOVIE"
-      },
-    ]
-  },
-  {
-    id: '58694a0f-3da1-471f-bd96-145ejhbf571e29d72',
-    title: 'Section 4',
-    movies: [
-      {
-        id: '397484355665',
-        name: "Movie 1",
-        description: "VERY COOL MOVIE"
-      },
-      {
-        id: '38454336687',
-        name: "Movie 2",
-        description: "VERY COOL MOVIE"
-      },
-      {
-        id: '298537564736',
-        name: "Movie 3",
-        description: "VERY COOL MOVIE"
-      },
-      {
-        id: '3748664275',
-        name: "Mo7vie 4",
-        description: "VERY COOL MOVIE"
-      },
-    ]
-  },
-];
+
 
 const Movie = ({ navigation, data, name }) => (
   <TouchableOpacity style={styles.movie} onPress={() => navigation.navigate('Detail', data)}>
-    <Text style={styles.title}>{name}</Text>
+    { data && data.attributes && data.attributes.posterImage && data.attributes.posterImage.original &&
+      <Image style={{ height: 132, width: 99 }} source={{uri: data.attributes.posterImage.small}} />
+    }
   </TouchableOpacity>
 );
 
@@ -193,7 +90,7 @@ function HomeScreen({ navigation }) {
 
       {loadingData ?
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: '#FFF' }}>Obteniendo resultados...</Text>
+          <Spinner color='white' />
         </View>
       :
         <FlatList
@@ -223,9 +120,8 @@ const styles = StyleSheet.create({
   movie: {
     marginVertical: 8,
     marginRight: 16,
-    height: 120,
-    width: 90,
-    backgroundColor: '#FFF'
+    height: 132,
+    width: 99,
   }
 });
 
