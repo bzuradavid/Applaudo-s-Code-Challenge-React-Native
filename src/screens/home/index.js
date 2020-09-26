@@ -137,13 +137,35 @@ function Section ({ navigation, title, movies }) {
 
 function HomeScreen({ navigation }) {
 
+  let [responseData, setResponseData] = React.useState('');
+  const fetchData = React.useCallback(() => {
+    axios({
+      "method": "GET",
+      "url": "https://kitsu.io/api/edge/anime",
+      "headers": {
+        "Accept": "application/vnd.api+json",
+        "Content-Type": "application/vnd.api+json"
+      }
+    })
+    .then((response) => {
+      console.log(response.data)
+      setResponseData(response.data)
+    })
+    .catch((error) => {
+      console.log(error)
+    })
+  }, [])
+  React.useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
   const renderSection = ({ item }) => (
     <Section title={item.title} movies={item.movies} navigation={navigation} />
   );
 
   return (
-    <Container style={{ backgroundColor: '#000', padding: 20}}>
-      <View style={{ marginHorizontal: 10 }}>
+    <Container style={{ backgroundColor: '#000', padding: 10}}>
+      <View style={{ marginHorizontal: 20 }}>
         <Item>
           <Icon active name='md-search' style={{ color: '#fff'}} />
           <Input placeholder='Search' style={{ color: '#fff'}} />
