@@ -45,42 +45,29 @@ function HomeScreen({ navigation }) {
     return URL
   }
 
-  const fetchData = React.useCallback((searchTerm=null) => {
+  const getSection = async (URL, nextUrl) => {
+    if (!nextUrl) {
+      return (await axios.get(URL)).data
+    } else {
+      return (await axios.get(nextUrl)).data
+    }
+  }
+
+  const fetchData = React.useCallback(async (searchTerm=null) => {
     setLoadingData(true)
     const formattedArray = []
     const URL = getUrl(searchTerm)
-    axios.get(URL).then((response) => {
-      formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
-      if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
-        formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
-        if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
-          formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
-          if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
-            formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
-            if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
-              formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
-              if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
-                formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
-                if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
-                  formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
-                  if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
-                    formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
-                    if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
-                      formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
-                      if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
-                        formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
-                        setResponseData(formattedArray);
-                        setLoadingData(false);
-                      }).catch((error) => { console.log("SEARCHERROR1",error)})} else { setResponseData(formattedArray); setLoadingData(false); }
-                    }).catch((error) => { console.log("SEARCHERROR2",error)})} else { setResponseData(formattedArray); setLoadingData(false); }
-                  }).catch((error) => { console.log("SEARCHERROR3",error)})} else { setResponseData(formattedArray); setLoadingData(false); }
-                }).catch((error) => { console.log("SEARCHERROR4",error)})} else { setResponseData(formattedArray); setLoadingData(false); }
-              }).catch((error) => { console.log("SEARCHERROR5",error)})} else { setResponseData(formattedArray); setLoadingData(false); }
-            }).catch((error) => { console.log("SEARCHERROR6",error)})} else { setResponseData(formattedArray); setLoadingData(false); }
-          }).catch((error) => { console.log("SEARCHERROR7",error)})} else { setResponseData(formattedArray); setLoadingData(false); }
-        }).catch((error) => { console.log("SEARCHERROR8",error)})} else { setResponseData(formattedArray); setLoadingData(false); }
-      }).catch((error) => { console.log("SEARCHERROR9",error)})} else { setResponseData(formattedArray); setLoadingData(false); }
-    }).catch((error) => { console.log("SEARCHERROR10",error)})
+    let nextUrl = null
+
+    for (let i = 0; i < 20; i++) {
+      let section = await getSection(URL, nextUrl)
+      formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: section.data })
+      nextUrl = section.links.next
+      if (!nextUrl) break;
+    }
+    
+    setResponseData(formattedArray)
+    setLoadingData(false)
   }, [])
 
   React.useEffect(() => {
