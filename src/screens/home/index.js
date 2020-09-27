@@ -31,49 +31,61 @@ function Section ({ navigation, title, movies }) {
 }
 
 function HomeScreen({ navigation }) {
-  let [loadingData, setLoadingData] = React.useState(true);
-  let [fetchUrl, setFetchUrl] = React.useState("https://kitsu.io/api/edge/anime");
+
+  let [input, setInput] = React.useState('');
+  let [loadingData, setLoadingData] = React.useState(false);
   let [responseData, setResponseData] = React.useState([]);
-  let [count, setCount] = React.useState(0);
-  const fetchData = React.useCallback(() => {
+
+  const fetchData = React.useCallback((searchTerm=null) => {
+    setLoadingData(true)
     const resultArray = []
-    axios.get(fetchUrl).then((response) => {
+    let URL = "https://kitsu.io/api/edge/anime"
+    if (searchTerm) {
+      URL = `https://kitsu.io/api/edge/anime?filter%5Btext%5D=${searchTerm}`
+      if (URL.length > 1) URL = URL.replace(/ /g, '%20')
+    }
+    console.log(URL)
+    axios.get(URL).then((response) => {
       resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
-      axios.get(response.data.links.next).then((response) => {
+      if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
         resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
-        axios.get(response.data.links.next).then((response) => {
+        if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
           resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
-          axios.get(response.data.links.next).then((response) => {
+          if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
             resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
-            axios.get(response.data.links.next).then((response) => {
+            if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
               resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
-              axios.get(response.data.links.next).then((response) => {
+              if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
                 resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
-                axios.get(response.data.links.next).then((response) => {
+                if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
                   resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
-                  axios.get(response.data.links.next).then((response) => {
+                  if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
                     resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
-                    axios.get(response.data.links.next).then((response) => {
+                    if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
                       resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
-                      axios.get(response.data.links.next).then((response) => {
+                      if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
                         resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
-                        console.log(resultArray)
-                        setResponseData(resultArray)
-                        setLoadingData(false)
-                      }).catch((error) => { console.log(error)})
-                    }).catch((error) => { console.log(error)})
-                  }).catch((error) => { console.log(error)})
-                }).catch((error) => { console.log(error)})
-              }).catch((error) => { console.log(error)})
-            }).catch((error) => { console.log(error)})
-          }).catch((error) => { console.log(error)})
-        }).catch((error) => { console.log(error)})
-      }).catch((error) => { console.log(error)})
-    }).catch((error) => { console.log(error)})
+                        setResponseData(resultArray);
+                        setLoadingData(false);
+                      }).catch((error) => { console.log("SEARCHERROR1",error)})} else { setResponseData(resultArray); setLoadingData(false); }
+                    }).catch((error) => { console.log("SEARCHERROR2",error)})} else { setResponseData(resultArray); setLoadingData(false); }
+                  }).catch((error) => { console.log("SEARCHERROR3",error)})} else { setResponseData(resultArray); setLoadingData(false); }
+                }).catch((error) => { console.log("SEARCHERROR4",error)})} else { setResponseData(resultArray); setLoadingData(false); }
+              }).catch((error) => { console.log("SEARCHERROR5",error)})} else { setResponseData(resultArray); setLoadingData(false); }
+            }).catch((error) => { console.log("SEARCHERROR6",error)})} else { setResponseData(resultArray); setLoadingData(false); }
+          }).catch((error) => { console.log("SEARCHERROR7",error)})} else { setResponseData(resultArray); setLoadingData(false); }
+        }).catch((error) => { console.log("SEARCHERROR8",error)})} else { setResponseData(resultArray); setLoadingData(false); }
+      }).catch((error) => { console.log("SEARCHERROR9",error)})} else { setResponseData(resultArray); setLoadingData(false); }
+    }).catch((error) => { console.log("SEARCHERROR10",error)})
   }, [])
+
   React.useEffect(() => {
       fetchData()
-  }, [fetchData])
+  }, [])
+
+  const performSearch = () => {
+    fetchData(input)
+  }
 
   const renderSection = ({ item }) => (
     <Section title={item.name} movies={item.movies} navigation={navigation} />
@@ -83,8 +95,8 @@ function HomeScreen({ navigation }) {
       <View style={{ marginHorizontal: 20 }}>
         <Item>
           <Icon active name='md-search' style={{ color: '#fff'}} />
-          <Input placeholder='Search' placeholderTextColor='#fff' style={{ color: '#fff'}} />
-          <Icon active name='md-close' style={{ color: '#fff'}} />
+          <Input value={input} onChangeText={e => setInput(e)} onBlur={() => performSearch()} placeholder='Search' placeholderTextColor='#fff' style={{ color: '#fff'}} />
+          <Icon onPress={() => setInput('')} active name='md-close' style={{ color: '#fff'}} />
         </Item>
       </View>
 
