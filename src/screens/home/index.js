@@ -32,60 +32,60 @@ function Section ({ navigation, title, movies }) {
 
 function HomeScreen({ navigation }) {
 
-  let [input, setInput] = React.useState('');
+  let [searchTerm, setSearchTerm] = React.useState('');
   let [loadingData, setLoadingData] = React.useState(false);
   let [responseData, setResponseData] = React.useState([]);
 
-  const fetchData = React.useCallback((searchTerm=null) => {
-    setLoadingData(true)
-    const resultArray = []
+  const getUrl = (searchTerm = null) => {
     let URL = "https://kitsu.io/api/edge/anime"
     if (searchTerm) {
       URL = `https://kitsu.io/api/edge/anime?filter%5Btext%5D=${searchTerm}`
-      if (URL.length > 1) URL = URL.replace(/ /g, '%20')
+      URL = URL.replace(/ /g, '%20')
     }
-    console.log(URL)
+    return URL
+  }
+
+  const fetchData = React.useCallback((searchTerm=null) => {
+    setLoadingData(true)
+    const formattedArray = []
+    const URL = getUrl(searchTerm)
     axios.get(URL).then((response) => {
-      resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+      formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
       if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
-        resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+        formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
         if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
-          resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+          formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
           if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
-            resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+            formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
             if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
-              resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+              formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
               if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
-                resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+                formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
                 if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
-                  resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+                  formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
                   if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
-                    resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+                    formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
                     if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
-                      resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
+                      formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
                       if (response.data.links.next) { axios.get(response.data.links.next).then((response) => {
-                        resultArray.push({id: `section${resultArray.length + 1}`, name: `Section ${resultArray.length + 1}`, movies: response.data.data})
-                        setResponseData(resultArray);
+                        formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: response.data.data})
+                        setResponseData(formattedArray);
                         setLoadingData(false);
-                      }).catch((error) => { console.log("SEARCHERROR1",error)})} else { setResponseData(resultArray); setLoadingData(false); }
-                    }).catch((error) => { console.log("SEARCHERROR2",error)})} else { setResponseData(resultArray); setLoadingData(false); }
-                  }).catch((error) => { console.log("SEARCHERROR3",error)})} else { setResponseData(resultArray); setLoadingData(false); }
-                }).catch((error) => { console.log("SEARCHERROR4",error)})} else { setResponseData(resultArray); setLoadingData(false); }
-              }).catch((error) => { console.log("SEARCHERROR5",error)})} else { setResponseData(resultArray); setLoadingData(false); }
-            }).catch((error) => { console.log("SEARCHERROR6",error)})} else { setResponseData(resultArray); setLoadingData(false); }
-          }).catch((error) => { console.log("SEARCHERROR7",error)})} else { setResponseData(resultArray); setLoadingData(false); }
-        }).catch((error) => { console.log("SEARCHERROR8",error)})} else { setResponseData(resultArray); setLoadingData(false); }
-      }).catch((error) => { console.log("SEARCHERROR9",error)})} else { setResponseData(resultArray); setLoadingData(false); }
+                      }).catch((error) => { console.log("SEARCHERROR1",error)})} else { setResponseData(formattedArray); setLoadingData(false); }
+                    }).catch((error) => { console.log("SEARCHERROR2",error)})} else { setResponseData(formattedArray); setLoadingData(false); }
+                  }).catch((error) => { console.log("SEARCHERROR3",error)})} else { setResponseData(formattedArray); setLoadingData(false); }
+                }).catch((error) => { console.log("SEARCHERROR4",error)})} else { setResponseData(formattedArray); setLoadingData(false); }
+              }).catch((error) => { console.log("SEARCHERROR5",error)})} else { setResponseData(formattedArray); setLoadingData(false); }
+            }).catch((error) => { console.log("SEARCHERROR6",error)})} else { setResponseData(formattedArray); setLoadingData(false); }
+          }).catch((error) => { console.log("SEARCHERROR7",error)})} else { setResponseData(formattedArray); setLoadingData(false); }
+        }).catch((error) => { console.log("SEARCHERROR8",error)})} else { setResponseData(formattedArray); setLoadingData(false); }
+      }).catch((error) => { console.log("SEARCHERROR9",error)})} else { setResponseData(formattedArray); setLoadingData(false); }
     }).catch((error) => { console.log("SEARCHERROR10",error)})
   }, [])
 
   React.useEffect(() => {
       fetchData()
   }, [])
-
-  const performSearch = () => {
-    fetchData(input)
-  }
 
   const renderSection = ({ item }) => (
     <Section title={item.name} movies={item.movies} navigation={navigation} />
@@ -95,8 +95,15 @@ function HomeScreen({ navigation }) {
       <View style={{ marginHorizontal: 20 }}>
         <Item>
           <Icon active name='md-search' style={{ color: '#fff'}} />
-          <Input value={input} onChangeText={e => setInput(e)} onBlur={() => performSearch()} placeholder='Search' placeholderTextColor='#fff' style={{ color: '#fff'}} />
-          <Icon onPress={() => setInput('')} active name='md-close' style={{ color: '#fff'}} />
+          <Input 
+            value={searchTerm}
+            onChangeText={value => setSearchTerm(value)}
+            onBlur={() => fetchData(searchTerm)}
+            placeholder='Search'
+            placeholderTextColor='#fff'
+            style={{ color: '#fff'}}
+          />
+          <Icon onPress={() => setSearchTerm('')} active name='md-close' style={{ color: '#fff'}} />
         </Item>
       </View>
 
