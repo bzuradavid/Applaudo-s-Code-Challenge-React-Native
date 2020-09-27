@@ -45,28 +45,27 @@ function HomeScreen({ navigation }) {
     return URL
   }
 
-  const getSection = async (URL, nextUrl) => {
-    if (!nextUrl) {
-      return (await axios.get(URL)).data
-    } else {
-      return (await axios.get(nextUrl)).data
-    }
+  const getSection = async (URL) => {
+    return (await axios.get(URL)).data
   }
 
   const fetchData = React.useCallback(async (searchTerm=null) => {
     setLoadingData(true)
-    const formattedArray = []
-    const URL = getUrl(searchTerm)
-    let nextUrl = null
+    const formattedResponse = []
+    let URL = getUrl(searchTerm)
 
     for (let i = 0; i < 20; i++) {
-      let section = await getSection(URL, nextUrl)
-      formattedArray.push({id: `section${formattedArray.length + 1}`, name: `Section ${formattedArray.length + 1}`, movies: section.data })
-      nextUrl = section.links.next
-      if (!nextUrl) break;
+      let section = await getSection(URL)
+      formattedResponse.push({
+        id: `section${formattedResponse.length + 1}`,
+        name: `Section ${formattedResponse.length + 1}`,
+        movies: section.data 
+      })
+      URL = section.links.next
+      if (!URL) break;
     }
-    
-    setResponseData(formattedArray)
+
+    setResponseData(formattedResponse)
     setLoadingData(false)
   }, [])
 
