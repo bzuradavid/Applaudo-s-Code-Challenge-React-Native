@@ -7,9 +7,7 @@ import axios from 'axios';
 
 const Movie = ({ navigation, data, name }) => (
   <TouchableOpacity style={styles.movie} onPress={() => navigation.navigate('Detail', data)}>
-    { data && data.attributes && data.attributes.posterImage && data.attributes.posterImage.original &&
-      <Image style={{ height: 132, width: 99 }} source={{uri: data.attributes.posterImage.small}} />
-    }
+    <Image style={{ height: 132, width: 99 }} source={{uri: data.attributes.posterImage.small}} />
   </TouchableOpacity>
 );
 
@@ -22,7 +20,7 @@ function Section ({ navigation, title, movies }) {
       <Text style={styles.title}>{title}</Text>
       <FlatList
         horizontal
-        data={movies}
+        data={movies.filter(movie => movie.attributes.posterImage != null)}
         renderItem={renderMovie}
         keyExtractor={item => item.id}
       />
@@ -69,8 +67,35 @@ function HomeScreen({ navigation }) {
     setLoadingData(false)
   }, [])
 
+  const fetchInitial = React.useCallback(() => {
+    setLoadingData(true)
+    let genreList = []
+    const formattedResponse = []
+    axios.get('https://kitsu.io/api/edge/categories').then(async (response) => {
+      try {
+        genreList = response.data.data
+        console.log(genreList)
+        for (let i = 0; i < genreList.length; i++) {
+          let url = `https://kitsu.io/api/edge/anime?filter%5Bcategories%5D=${genreList[i].attributes.slug}`
+          let section = await axios.get(url)
+          // console.log(url)
+          // console.log(section.data.data)
+          formattedResponse.push({
+            id: `section${formattedResponse.length + 1}`,
+            name: genreList[i].attributes.title,
+            movies: section.data.data
+          })
+        }
+        setResponseData(formattedResponse)
+        setLoadingData(false)
+      } catch(err) {
+        console.log(err)
+      }
+    })
+  }, [])
+
   React.useEffect(() => {
-      fetchData()
+      fetchInitial();
   }, [])
 
   const renderSection = ({ item }) => (
