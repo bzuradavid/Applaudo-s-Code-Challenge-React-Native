@@ -72,7 +72,7 @@ function DetailScreen({ route, navigation }) {
           </View>
           <View style={styles.bodyContainer}>
             <Text style={styles.title}>Genres</Text>
-            <Text style={styles.text}>{ genres }</Text>
+            <Text style={styles.text}>{ genres ? genres : 'Loading...' }</Text>
             <View style={styles.row}>
               <View style={styles.col}>
                 <Text style={styles.title}>Average Rating</Text>
