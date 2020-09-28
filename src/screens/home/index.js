@@ -17,7 +17,9 @@ function Section ({ navigation, title, movies }) {
   );
   return (
     <View style={styles.section}>
-      <Text style={styles.title}>{title}</Text>
+      {title &&
+        <Text style={styles.title}>{title}</Text>
+      }
       <FlatList
         horizontal
         data={movies.filter(movie => movie.attributes.posterImage != null)}
@@ -56,7 +58,7 @@ function HomeScreen({ navigation }) {
       let section = await getSection(URL)
       formattedResponse.push({
         id: `section${formattedResponse.length + 1}`,
-        name: `Section ${formattedResponse.length + 1}`,
+        name: null,
         movies: section.data 
       })
       URL = section.links.next
