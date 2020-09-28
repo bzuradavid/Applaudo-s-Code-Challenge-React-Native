@@ -54,7 +54,7 @@ function HomeScreen({ navigation }) {
     const formattedResponse = []
     let URL = getUrl(searchTerm)
 
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 5; i++) {
       let section = await getSection(URL)
       formattedResponse.push({
         id: `section${formattedResponse.length + 1}`,
