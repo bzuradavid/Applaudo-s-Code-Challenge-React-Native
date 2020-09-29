@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Button, View, Text, FlatList, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Container, Header, Content, Item, Input, Icon, Spinner } from 'native-base';
 import axios from 'axios';
+import env from 'react-native-config'
 
 
 
@@ -37,7 +38,7 @@ function HomeScreen({ navigation }) {
   let [responseData, setResponseData] = React.useState([]);
 
   const getUrl = (searchTerm = null) => {
-    let URL = `https://kitsu.io/api/edge/anime?filter%5Btext%5D=${searchTerm}`
+    let URL = `${env.BASE_URL}/anime?filter%5Btext%5D=${searchTerm}`
     URL = URL.replace(/ /g, '%20')
     return URL
   }
@@ -70,15 +71,12 @@ function HomeScreen({ navigation }) {
     setLoadingData(true)
     let genreList = []
     const formattedResponse = []
-    axios.get('https://kitsu.io/api/edge/categories').then(async (response) => {
+    axios.get(`${env.BASE_URL}/categories`).then(async (response) => {
       try {
         genreList = response.data.data
-        console.log(genreList)
         for (let i = 0; i < genreList.length; i++) {
-          let url = `https://kitsu.io/api/edge/anime?filter%5Bcategories%5D=${genreList[i].attributes.slug}`
+          let url = `${env.BASE_URL}/anime?filter%5Bcategories%5D=${genreList[i].attributes.slug}`
           let section = await axios.get(url)
-          // console.log(url)
-          // console.log(section.data.data)
           formattedResponse.push({
             id: `section${formattedResponse.length + 1}`,
             name: genreList[i].attributes.title,

@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, Image, ScrollView, SafeAreaView, FlatList, Link
 import { Container, Header, Content, Item, Input, Icon, Spinner, Toast } from 'native-base';
 import axios from 'axios'
 import moment from 'moment'
+import env from 'react-native-config'
+
 
 
 
@@ -23,16 +25,16 @@ function DetailScreen({ route, navigation }) {
 
   const fetchExtraData = () => {
     axios.get(data.relationships.genres.links.self).then(async (response) => {
-      const genresArray = await getResourceDetails(response.data.data, 'https://kitsu.io/api/edge/genres/')
+      const genresArray = await getResourceDetails(response.data.data, `${env.BASE_URL}/genres/`)
       const formattedGenres = genresArray.map(genre => genre.name)
       setGenres(formattedGenres)
     })
     axios.get(data.relationships.characters.links.self).then(async (response) => {
-      setCharacters(await getResourceDetails(response.data.data, 'https://kitsu.io/api/edge/characters/'))
+      setCharacters(await getResourceDetails(response.data.data, `${env.BASE_URL}/characters/`))
       setCharactersLoaded(true)
     })
     axios.get(data.relationships.episodes.links.self).then(async (response) => {
-      setEpisodes(await getResourceDetails(response.data.data, 'https://kitsu.io/api/edge/episodes/'))
+      setEpisodes(await getResourceDetails(response.data.data, `${env.BASE_URL}/episodes/`))
       setEpisodesLoaded(true)
     })
   }
