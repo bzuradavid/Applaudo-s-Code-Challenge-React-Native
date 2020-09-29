@@ -2,10 +2,14 @@ import * as React from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, SafeAreaView, FlatList, Linking } from 'react-native';
 import { Container, Header, Content, Item, Input, Icon, Spinner, Toast } from 'native-base';
 import axios from 'axios'
+import moment from 'moment'
+
 
 
 function DetailScreen({ route, navigation }) {
   const data = route.params
+  const startDate = moment(data.attributes.startDate).format('DD/MM/YYYY')
+  const endDate = data.attributes.endDate ? moment(data.attributes.endDate).format('DD/MM/YYYY') : null
 
   const [error, setError] = React.useState(false)
   React.useEffect(() => {
@@ -46,12 +50,11 @@ function DetailScreen({ route, navigation }) {
         formattedResources.push(item.data.data.attributes)
       } catch(err) {
         Toast.show({
-          text: "An error ocurred while loading some resources",
-          buttonText: "Close",
+          text: "Some data was not found",
           duration: 3000,
           type: "danger"
         })
-        console.log(err)
+        console.log(URL + resourceList[i].id, err.message)
       }
     }
     return formattedResources
@@ -69,11 +72,11 @@ function DetailScreen({ route, navigation }) {
               <Text style={styles.title}>Main Title</Text>
               <Text style={styles.text}>{ data.attributes.titles.en || 'Unavailable' }</Text>
               <Text style={styles.title}>Canonical Title</Text>
-              <Text style={styles.text}>{ data.attributes.titles.en || 'Unavailable' }</Text>
+              <Text style={styles.text}>{ data.attributes.canonicalTitle || 'Unavailable' }</Text>
               <Text style={styles.title}>Type</Text>
               <Text style={styles.text}>{ data.attributes.showType } { data.attributes.episodeCount > 1 && `, ${data.attributes.episodeCount} episodes` }</Text>
               <Text style={styles.title}>Year</Text>
-              <Text style={styles.text}>{ data.attributes.startDate } till { data.attributes.endDate }</Text>
+              <Text style={styles.text}>{ startDate } { endDate && endDate != startDate && `- ${endDate}`}</Text>
             </View>
           </View>
           <View style={styles.bodyContainer}>
@@ -137,7 +140,7 @@ function DetailScreen({ route, navigation }) {
                 { episodes.length > 1 && episodes.map((episode, i) => {
                   return (
                     <View key={`${episode}-${i}`} style={{marginBottom: 16}}>
-                      <Text style={{...styles.text, fontWeight: 'bold'}}>Episode {episode.number} {episode.airdate && `(${episode.airdate})`}</Text>
+                      <Text style={{...styles.text, fontWeight: 'bold'}}>Episode {episode.number} {episode.airdate && `(${moment(episode.airdate).format('DD/MM/YYYY')})`}</Text>
                       { episode.titles.en_us ?
                         <Text style={styles.text}>{`${episode.titles.en_us} (${episode.titles.en_jp})`}</Text>
                       :

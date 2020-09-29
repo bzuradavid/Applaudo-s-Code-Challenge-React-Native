@@ -37,11 +37,8 @@ function HomeScreen({ navigation }) {
   let [responseData, setResponseData] = React.useState([]);
 
   const getUrl = (searchTerm = null) => {
-    let URL = "https://kitsu.io/api/edge/anime"
-    if (searchTerm) {
-      URL = `https://kitsu.io/api/edge/anime?filter%5Btext%5D=${searchTerm}`
-      URL = URL.replace(/ /g, '%20')
-    }
+    let URL = `https://kitsu.io/api/edge/anime?filter%5Btext%5D=${searchTerm}`
+    URL = URL.replace(/ /g, '%20')
     return URL
   }
 
@@ -69,7 +66,7 @@ function HomeScreen({ navigation }) {
     setLoadingData(false)
   }, [])
 
-  const fetchInitial = React.useCallback(() => {
+  const fetchInitialData = React.useCallback(() => {
     setLoadingData(true)
     let genreList = []
     const formattedResponse = []
@@ -97,7 +94,7 @@ function HomeScreen({ navigation }) {
   }, [])
 
   React.useEffect(() => {
-      fetchInitial();
+      fetchInitialData();
   }, [])
 
   const renderSection = ({ item }) => (
