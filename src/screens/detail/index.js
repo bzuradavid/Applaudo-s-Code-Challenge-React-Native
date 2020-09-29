@@ -1,54 +1,60 @@
 import * as React from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, SafeAreaView } from 'react-native';
-import { Container, Header, Content, Item, Input, Icon, Spinner } from 'native-base';
+import { View, Text, StyleSheet, Image, ScrollView, SafeAreaView, FlatList, Linking } from 'react-native';
+import { Container, Header, Content, Item, Input, Icon, Spinner, Toast } from 'native-base';
 import axios from 'axios'
 
 
 function DetailScreen({ route, navigation }) {
   const data = route.params
-  const youtubeLink = data.youtubeVideoId
 
-  const [genres, setGenres] = React.useState('')
-  const [episodes, setEpisodes] = React.useState([])
-  // React.useEffect(() => {
-  //   console.log(episodes)
-  // }, [episodes])
-
+  const [error, setError] = React.useState(false)
+  React.useEffect(() => {
+    
+  },[error])
+  const [genres, setGenres] = React.useState([])
   const [characters, setCharacters] = React.useState([])
-  // React.useEffect(() => {
-  //   console.log(characters)
-  // }, [characters])
+  const [charactersLoaded, setCharactersLoaded] = React.useState(false)
+  const [episodes, setEpisodes] = React.useState([])
+  const [episodesLoaded, setEpisodesLoaded] = React.useState(false)
 
-  
-  // React.useEffect(() => {
-  //   console.log(genres)
-  // }, [genres])
-
-  const fetchExtraData = React.useCallback(() => {
-    // axios.get(data.relationships.episodes.links.self).then(response => {
-      // setEpisodes(response.data.data)
-    // })
-    // axios.get(data.relationships.characters.links.self).then(response => {
-      // setCharacters(response.data.data)
-    // })
-    axios.get(route.params.relationships.genres.links.self).then(response => {
-      getGenres(response.data.data)
+  const fetchExtraData = () => {
+    axios.get(data.relationships.genres.links.self).then(async (response) => {
+      const genresArray = await getResourceDetails(response.data.data, 'https://kitsu.io/api/edge/genres/')
+      const formattedGenres = genresArray.map(genre => genre.name)
+      setGenres(formattedGenres)
     })
-  }, [])
+    axios.get(data.relationships.characters.links.self).then(async (response) => {
+      setCharacters(await getResourceDetails(response.data.data, 'https://kitsu.io/api/edge/characters/'))
+      setCharactersLoaded(true)
+    })
+    axios.get(data.relationships.episodes.links.self).then(async (response) => {
+      setEpisodes(await getResourceDetails(response.data.data, 'https://kitsu.io/api/edge/episodes/'))
+      setEpisodesLoaded(true)
+    })
+  }
 
   React.useEffect(() => {
-    // console.log(data)
+    console.log(data.attributes)
     fetchExtraData()
   }, [])
 
-  const getGenres = async (genresList) => {
-    let formattedGenres = ''
-    for (let i = 0; i < genresList.length; i++) {
-      let gen = await axios.get(`https://kitsu.io/api/edge/genres/${genresList[i].id}`)
-      formattedGenres += gen.data.data.attributes.name
-      if (i < genresList.length - 1) formattedGenres += ', '
+  const getResourceDetails = async (resourceList, URL) => {
+    let formattedResources = []
+    for (let i = 0; i < resourceList.length; i++) {
+      try {
+        let item = await axios.get(URL + resourceList[i].id)
+        formattedResources.push(item.data.data.attributes)
+      } catch(err) {
+        Toast.show({
+          text: "An error ocurred while loading some resources",
+          buttonText: "Close",
+          duration: 3000,
+          type: "danger"
+        })
+        console.log(err)
+      }
     }
-    setGenres(formattedGenres)
+    return formattedResources
   }
 
   
@@ -61,18 +67,18 @@ function DetailScreen({ route, navigation }) {
             <Image style={{ height: 200, width: 150 }} source={{uri: data.attributes.posterImage.small}} />
             <View style={styles.headerTextContainer}>
               <Text style={styles.title}>Main Title</Text>
-              <Text style={styles.text}>{ data.attributes.titles.en }</Text>
+              <Text style={styles.text}>{ data.attributes.titles.en || 'Unavailable' }</Text>
               <Text style={styles.title}>Canonical Title</Text>
-              <Text style={styles.text}>{ data.attributes.titles.en }</Text>
+              <Text style={styles.text}>{ data.attributes.titles.en || 'Unavailable' }</Text>
               <Text style={styles.title}>Type</Text>
-              <Text style={styles.text}>{ data.attributes.showType }, { data.attributes.episodeCount }</Text>
+              <Text style={styles.text}>{ data.attributes.showType } { data.attributes.episodeCount > 1 && `, ${data.attributes.episodeCount} episodes` }</Text>
               <Text style={styles.title}>Year</Text>
               <Text style={styles.text}>{ data.attributes.startDate } till { data.attributes.endDate }</Text>
             </View>
           </View>
           <View style={styles.bodyContainer}>
             <Text style={styles.title}>Genres</Text>
-            <Text style={styles.text}>{ genres ? genres : 'Loading...' }</Text>
+            <Text style={styles.text}>{ genres.length > 0 ? genres.toString().replace(/,/g,',  ') : 'Loading...' }</Text>
             <View style={styles.row}>
               <View style={styles.col}>
                 <Text style={styles.title}>Average Rating</Text>
@@ -80,13 +86,13 @@ function DetailScreen({ route, navigation }) {
               </View>
               <View style={styles.col}>
                 <Text style={styles.title}>Age Rating</Text>
-                <Text style={styles.text}>{ data.attributes.ageRating }</Text>
+                <Text style={styles.text}>{ `${data.attributes.ageRating} (${data.attributes.ageRatingGuide})` }</Text>
               </View>
             </View>
             <View style={styles.row}>
               <View style={styles.col}>
                 <Text style={styles.title}>Episode Duration</Text>
-                <Text style={styles.text}>{ data.attributes.episodeLength } min</Text>
+                <Text style={styles.text}>{ data.attributes.episodeLength ? `${data.attributes.episodeLength} min` : 'Unavailable' }</Text>
               </View>
               <View style={styles.col}>
                 <Text style={styles.title}>Airing status</Text>
@@ -95,10 +101,56 @@ function DetailScreen({ route, navigation }) {
             </View>
             <View style={styles.row}>
               <View style={styles.col}>
-                <Text style={{...styles.title, marginTop: 20}}>Synopsis</Text>
+                <Text style={{...styles.title, marginVertical: 20}}>Synopsis</Text>
                 <Text style={styles.text}>{ data.attributes.synopsis}</Text>
               </View>
             </View>
+
+            { data.attributes.youtubeVideoId &&
+              <View style={{...styles.row, flex: 1, alignItems: 'center' }}>
+                <Icon active name='play-circle-outline' style={{ color: '#fff', marginRight: 10}} />
+                <Text style={styles.youtubeLink}
+                      onPress={() => Linking.openURL(`http://www.youtube.com/watch?v=${data.attributes.youtubeVideoId}`)}>
+                  Watch trailer on YouTube
+                </Text>
+              </View>
+            }
+
+            { charactersLoaded ?
+              <View>
+                {characters.length > 0 &&
+                <Text style={{...styles.title, marginVertical: 20}}>Characters</Text>
+                }
+                { characters.map(char => {
+                    return <Text style={styles.text} key={char.slug}>{char.name}</Text>
+                })}
+              </View>
+            :
+              <Spinner color='white' />
+            }
+
+            { episodesLoaded ?
+              <View>
+                { episodes.length > 1 &&
+                <Text style={{...styles.title, marginVertical: 20}}>Episodes</Text>
+                }
+                { episodes.length > 1 && episodes.map((episode, i) => {
+                  return (
+                    <View key={`${episode}-${i}`} style={{marginBottom: 16}}>
+                      <Text style={{...styles.text, fontWeight: 'bold'}}>Episode {episode.number} {episode.airdate && `(${episode.airdate})`}</Text>
+                      { episode.titles.en_us ?
+                        <Text style={styles.text}>{`${episode.titles.en_us} (${episode.titles.en_jp})`}</Text>
+                      :
+                        <Text style={styles.text}>Episode info unavailable</Text>
+                      }
+                    </View>
+                  )
+                })}
+              </View>
+            : 
+              <Spinner color='white' />
+            }
+
           </View>
         </View>
       </ScrollView>
@@ -144,6 +196,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     flex: 1,
     flexWrap: 'wrap'
+  },
+  youtubeLink: {
+    color: '#FFF',
+    fontSize: 24,
+    marginVertical: 10,
+    textDecorationStyle: 'solid',
+    textDecorationColor: 'white',
+    textDecorationLine: 'underline'
   },
   movie: {
     marginVertical: 8,
