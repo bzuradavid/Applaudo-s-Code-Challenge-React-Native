@@ -1,47 +1,74 @@
-import * as React from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, SafeAreaView, FlatList, Linking } from 'react-native';
-import { Container, Header, Content, Item, Input, Icon, Spinner, Toast } from 'native-base';
-import axios from 'axios'
-import moment from 'moment'
-import env from 'react-native-config'
+import * as React from "react";
+import { View, Text, StyleSheet, Image, ScrollView, SafeAreaView, FlatList, Linking } from "react-native";
+import { Container, Header, Content, Item, Input, Icon, Spinner, Toast } from "native-base";
+import axios from "axios"
+import moment from "moment"
+import env from "react-native-config"
 
 
 
 
 function DetailScreen({ route, navigation }) {
   const data = route.params
-  const startDate = moment(data.attributes.startDate).format('DD/MM/YYYY')
-  const endDate = data.attributes.endDate ? moment(data.attributes.endDate).format('DD/MM/YYYY') : null
+  const youtubeVideoId = data.attributes.youtubeVideoId || null
+  const startDate = moment(data.attributes.startDate).format("DD/MM/YYYY")
+  const endDate = data.attributes.endDate ? moment(data.attributes.endDate).format("DD/MM/YYYY") : null
 
-  const [error, setError] = React.useState(false)
-  React.useEffect(() => {
-    
-  },[error])
   const [genres, setGenres] = React.useState([])
-  const [characters, setCharacters] = React.useState([])
+  const [genresLoaded, setGenresLoaded] = React.useState(false)
   const [charactersLoaded, setCharactersLoaded] = React.useState(false)
-  const [episodes, setEpisodes] = React.useState([])
+  const [characters, setCharacters] = React.useState([])
   const [episodesLoaded, setEpisodesLoaded] = React.useState(false)
+  const [episodes, setEpisodes] = React.useState([])
 
-  const fetchExtraData = () => {
-    axios.get(data.relationships.genres.links.self).then(async (response) => {
+  const fetchGenres = async () => {
+    let formattedGenres
+    await axios.get(data.relationships.genres.links.self).then(async (response) => {
       const genresArray = await getResourceDetails(response.data.data, `${env.BASE_URL}/genres/`)
-      const formattedGenres = genresArray.map(genre => genre.name)
-      setGenres(formattedGenres)
+      formattedGenres = genresArray.map(genre => genre.name)
     })
-    axios.get(data.relationships.characters.links.self).then(async (response) => {
-      setCharacters(await getResourceDetails(response.data.data, `${env.BASE_URL}/characters/`))
-      setCharactersLoaded(true)
+    return formattedGenres
+  }
+
+  const fetchCharacters = async () => {
+    let formattedCharacters
+    await axios.get(data.relationships.characters.links.self).then(async (response) => {
+      formattedCharacters = await getResourceDetails(response.data.data, `${env.BASE_URL}/characters/`)
     })
-    axios.get(data.relationships.episodes.links.self).then(async (response) => {
-      setEpisodes(await getResourceDetails(response.data.data, `${env.BASE_URL}/episodes/`))
-      setEpisodesLoaded(true)
+    return formattedCharacters
+  }
+
+  const fetchEpisodes = async () => {
+    let formattedEpisodes
+    await axios.get(data.relationships.episodes.links.self).then(async (response) => {
+      formattedEpisodes = await getResourceDetails(response.data.data, `${env.BASE_URL}/episodes/`)
     })
+    return formattedEpisodes
   }
 
   React.useEffect(() => {
-    console.log(data.attributes)
-    fetchExtraData()
+    let mounted = true
+    fetchGenres().then((formattedGenres) => {
+      if (mounted) {
+        setGenres(formattedGenres)
+        setGenresLoaded(true)
+      }
+    })
+    fetchCharacters().then((formattedCharacters) => {
+      if (mounted) {
+        setCharacters(formattedCharacters)
+        setCharactersLoaded(true)
+      }
+    })
+    fetchEpisodes().then((formattedEpisodes) => {
+      if (mounted) {
+        setEpisodes(formattedEpisodes)
+        setEpisodesLoaded(true)
+      }
+    })
+    return function cleanup() {
+      mounted = false
+    }
   }, [])
 
   const getResourceDetails = async (resourceList, URL) => {
@@ -54,9 +81,11 @@ function DetailScreen({ route, navigation }) {
         Toast.show({
           text: "Some data was not found",
           duration: 3000,
-          type: "danger"
+          buttonText: "CLOSE",
+          type: "danger",
+          useNativeDriver: true
         })
-        console.log(URL + resourceList[i].id, err.message)
+        // console.log(URL + resourceList[i].id, err.message)
       }
     }
     return formattedResources
@@ -65,25 +94,25 @@ function DetailScreen({ route, navigation }) {
   
 
   return (
-    <View style={{backgroundColor: '#000', flex: 1}}>
+    <View style={{backgroundColor: "#000", flex: 1}}>
       <ScrollView>
         <View style={styles.mainContainer}>
           <View style={styles.headerContainer}>
             <Image style={{ height: 200, width: 150 }} source={{uri: data.attributes.posterImage.small}} />
             <View style={styles.headerTextContainer}>
               <Text style={styles.title}>Main Title</Text>
-              <Text style={styles.text}>{ data.attributes.titles.en || 'Unavailable' }</Text>
+              <Text style={styles.text}>{ data.attributes.titles.en || "Unavailable" }</Text>
               <Text style={styles.title}>Canonical Title</Text>
-              <Text style={styles.text}>{ data.attributes.canonicalTitle || 'Unavailable' }</Text>
+              <Text style={styles.text}>{ data.attributes.canonicalTitle || "Unavailable" }</Text>
               <Text style={styles.title}>Type</Text>
-              <Text style={styles.text}>{ data.attributes.showType } { data.attributes.episodeCount > 1 && `, ${data.attributes.episodeCount} episodes` }</Text>
+              <Text style={styles.text}>{ data.attributes.showType } { data.attributes.episodeCount > 1 && ", " + data.attributes.episodeCount + " episodes" }</Text>
               <Text style={styles.title}>Year</Text>
               <Text style={styles.text}>{ startDate } { endDate && endDate != startDate && `- ${endDate}`}</Text>
             </View>
           </View>
           <View style={styles.bodyContainer}>
             <Text style={styles.title}>Genres</Text>
-            <Text style={styles.text}>{ genres.length > 0 ? genres.toString().replace(/,/g,',  ') : 'Loading...' }</Text>
+            <Text style={styles.text}>{ genresLoaded ? genres.toString().replace(/,/g,",  ") : "Loading..." }</Text>
             <View style={styles.row}>
               <View style={styles.col}>
                 <Text style={styles.title}>Average Rating</Text>
@@ -91,13 +120,13 @@ function DetailScreen({ route, navigation }) {
               </View>
               <View style={styles.col}>
                 <Text style={styles.title}>Age Rating</Text>
-                <Text style={styles.text}>{ `${data.attributes.ageRating} (${data.attributes.ageRatingGuide})` }</Text>
+                <Text style={styles.text}>{ data.attributes.ageRating + "(" + data.attributes.ageRatingGuide + ")" }</Text>
               </View>
             </View>
             <View style={styles.row}>
               <View style={styles.col}>
                 <Text style={styles.title}>Episode Duration</Text>
-                <Text style={styles.text}>{ data.attributes.episodeLength ? `${data.attributes.episodeLength} min` : 'Unavailable' }</Text>
+                <Text style={styles.text}>{ data.attributes.episodeLength ? data.attributes.episodeLength + " min" : "Unavailable" }</Text>
               </View>
               <View style={styles.col}>
                 <Text style={styles.title}>Airing status</Text>
@@ -111,11 +140,11 @@ function DetailScreen({ route, navigation }) {
               </View>
             </View>
 
-            { data.attributes.youtubeVideoId &&
-              <View style={{...styles.row, flex: 1, alignItems: 'center' }}>
-                <Icon active name='play-circle-outline' style={{ color: '#fff', marginRight: 10}} />
+            { youtubeVideoId &&
+              <View style={{...styles.row, flex: 1, alignItems: "center" }}>
+                <Icon active name="play-circle-outline" style={{ color: "#fff", marginRight: 10}} />
                 <Text style={styles.youtubeLink}
-                      onPress={() => Linking.openURL(`http://www.youtube.com/watch?v=${data.attributes.youtubeVideoId}`)}>
+                      onPress={() => Linking.openURL("http://www.youtube.com/watch?v=" + data.attributes.youtubeVideoId)}>
                   Watch trailer on YouTube
                 </Text>
               </View>
@@ -131,7 +160,7 @@ function DetailScreen({ route, navigation }) {
                 })}
               </View>
             :
-              <Spinner color='white' />
+              <Spinner color="white" />
             }
 
             { episodesLoaded ?
@@ -142,9 +171,9 @@ function DetailScreen({ route, navigation }) {
                 { episodes.length > 1 && episodes.map((episode, i) => {
                   return (
                     <View key={`${episode}-${i}`} style={{marginBottom: 16}}>
-                      <Text style={{...styles.text, fontWeight: 'bold'}}>Episode {episode.number} {episode.airdate && `(${moment(episode.airdate).format('DD/MM/YYYY')})`}</Text>
+                      <Text style={{...styles.text, fontWeight: "bold"}}>Episode { episode.number } { episode.airdate && "(" + moment(episode.airdate).format("DD/MM/YYYY") + ")" }</Text>
                       { episode.titles.en_us ?
-                        <Text style={styles.text}>{`${episode.titles.en_us} (${episode.titles.en_jp})`}</Text>
+                        <Text style={styles.text}>{ episode.titles.en_us + "(" + episode.titles.en_jp + ")" }</Text>
                       :
                         <Text style={styles.text}>Episode info unavailable</Text>
                       }
@@ -153,7 +182,7 @@ function DetailScreen({ route, navigation }) {
                 })}
               </View>
             : 
-              <Spinner color='white' />
+              <Spinner color="white" />
             }
 
           </View>
@@ -167,7 +196,7 @@ const styles = StyleSheet.create({
   mainContainer: {
     padding: 10,
     flex: 1,
-    justifyContent: 'flex-start'
+    justifyContent: "flex-start"
   },
   headerContainer: {
     flexDirection:"row",
@@ -176,16 +205,16 @@ const styles = StyleSheet.create({
   headerTextContainer: {
     paddingLeft: 20,
     flex: 1,
-    flexDirection: 'column',
+    flexDirection: "column",
   },
   bodyContainer: {
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   col: {
     flex: 1,
-    flexDirection: 'column'
+    flexDirection: "column"
   },
   section: {
     marginVertical: 8,
@@ -193,22 +222,22 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    color: '#fff'
+    color: "#fff"
   },
   text: {
     fontSize: 14,
-    color: '#fff',
+    color: "#fff",
     marginBottom: 8,
     flex: 1,
-    flexWrap: 'wrap'
+    flexWrap: "wrap"
   },
   youtubeLink: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 24,
     marginVertical: 10,
-    textDecorationStyle: 'solid',
-    textDecorationColor: 'white',
-    textDecorationLine: 'underline'
+    textDecorationStyle: "solid",
+    textDecorationColor: "white",
+    textDecorationLine: "underline"
   },
   movie: {
     marginVertical: 8,
