@@ -1,25 +1,24 @@
-import * as React from "react";
-import { View, Text, StyleSheet, Image, ScrollView, SafeAreaView, FlatList, Linking } from "react-native";
-import { Container, Header, Content, Item, Input, Icon, Spinner, Toast } from "native-base";
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, ScrollView, Linking } from "react-native";
+import { Icon, Spinner, Toast } from "native-base";
 import axios from "axios"
 import moment from "moment"
 import env from "react-native-config"
 
 
 
-
-function DetailScreen({ route, navigation }) {
+function DetailScreen({ route }) {
   const data = route.params
   const youtubeVideoId = data.attributes.youtubeVideoId || null
   const startDate = moment(data.attributes.startDate).format("DD/MM/YYYY")
   const endDate = data.attributes.endDate ? moment(data.attributes.endDate).format("DD/MM/YYYY") : null
 
-  const [genres, setGenres] = React.useState([])
-  const [genresLoaded, setGenresLoaded] = React.useState(false)
-  const [charactersLoaded, setCharactersLoaded] = React.useState(false)
-  const [characters, setCharacters] = React.useState([])
-  const [episodesLoaded, setEpisodesLoaded] = React.useState(false)
-  const [episodes, setEpisodes] = React.useState([])
+  const [genres, setGenres] = useState([])
+  const [genresLoaded, setGenresLoaded] = useState(false)
+  const [charactersLoaded, setCharactersLoaded] = useState(false)
+  const [characters, setCharacters] = useState([])
+  const [episodesLoaded, setEpisodesLoaded] = useState(false)
+  const [episodes, setEpisodes] = useState([])
 
   const fetchGenres = async () => {
     let formattedGenres
@@ -46,7 +45,26 @@ function DetailScreen({ route, navigation }) {
     return formattedEpisodes
   }
 
-  React.useEffect(() => {
+  const getResourceDetails = async (resourceList, URL) => {
+    let formattedResources = []
+    for (let i = 0; i < resourceList.length; i++) {
+      try{
+        let item = await axios.get(URL + resourceList[i].id)
+        formattedResources.push(item.data.data.attributes)
+      }catch(err){
+        Toast.show({
+          text: "Some data was not found",
+          duration: 3000,
+          buttonText: "CLOSE",
+          type: "warning",
+          useNativeDriver: true
+        })
+      }
+    }
+    return formattedResources
+  }
+
+  useEffect(() => {
     let mounted = true
     fetchGenres().then((formattedGenres) => {
       if (mounted) {
@@ -71,28 +89,6 @@ function DetailScreen({ route, navigation }) {
     }
   }, [])
 
-  const getResourceDetails = async (resourceList, URL) => {
-    let formattedResources = []
-    for (let i = 0; i < resourceList.length; i++) {
-      try {
-        let item = await axios.get(URL + resourceList[i].id)
-        formattedResources.push(item.data.data.attributes)
-      } catch(err) {
-        Toast.show({
-          text: "Some data was not found",
-          duration: 3000,
-          buttonText: "CLOSE",
-          type: "danger",
-          useNativeDriver: true
-        })
-        // console.log(URL + resourceList[i].id, err.message)
-      }
-    }
-    return formattedResources
-  }
-
-  
-
   return (
     <View style={{backgroundColor: "#000", flex: 1}}>
       <ScrollView>
@@ -105,22 +101,22 @@ function DetailScreen({ route, navigation }) {
               <Text style={styles.title}>Canonical Title</Text>
               <Text style={styles.text}>{ data.attributes.canonicalTitle || "Unavailable" }</Text>
               <Text style={styles.title}>Type</Text>
-              <Text style={styles.text}>{ data.attributes.showType } { data.attributes.episodeCount > 1 && ", " + data.attributes.episodeCount + " episodes" }</Text>
+              <Text style={styles.text}>{ data.attributes.showType || "Unavailable" } { data.attributes.episodeCount > 1 && ", " + data.attributes.episodeCount + " episodes" }</Text>
               <Text style={styles.title}>Year</Text>
               <Text style={styles.text}>{ startDate } { endDate && endDate != startDate && `- ${endDate}`}</Text>
             </View>
           </View>
-          <View style={styles.bodyContainer}>
+          <View>
             <Text style={styles.title}>Genres</Text>
             <Text style={styles.text}>{ genresLoaded ? genres.toString().replace(/,/g,",  ") : "Loading..." }</Text>
             <View style={styles.row}>
               <View style={styles.col}>
                 <Text style={styles.title}>Average Rating</Text>
-                <Text style={styles.text}>{ data.attributes.averageRating }</Text>
+                <Text style={styles.text}>{ data.attributes.averageRating || "Unavailable" }</Text>
               </View>
               <View style={styles.col}>
                 <Text style={styles.title}>Age Rating</Text>
-                <Text style={styles.text}>{ data.attributes.ageRating + "(" + data.attributes.ageRatingGuide + ")" }</Text>
+                <Text style={styles.text}>{ data.attributes.ageRating || "Unavailable" + " (" + data.attributes.ageRatingGuide + ")" }</Text>
               </View>
             </View>
             <View style={styles.row}>
@@ -130,13 +126,13 @@ function DetailScreen({ route, navigation }) {
               </View>
               <View style={styles.col}>
                 <Text style={styles.title}>Airing status</Text>
-                <Text style={styles.text}>{ data.attributes.status }</Text>
+                <Text style={styles.text}>{ data.attributes.status || "Unavailable" }</Text>
               </View>
             </View>
             <View style={styles.row}>
               <View style={styles.col}>
                 <Text style={{...styles.title, marginVertical: 20}}>Synopsis</Text>
-                <Text style={styles.text}>{ data.attributes.synopsis}</Text>
+                <Text style={styles.text}>{ data.attributes.synopsis || "Unavailable"}</Text>
               </View>
             </View>
 
@@ -206,8 +202,6 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
     flex: 1,
     flexDirection: "column",
-  },
-  bodyContainer: {
   },
   row: {
     flexDirection: "row",

@@ -1,12 +1,12 @@
-import * as React from 'react';
-import { Button, View, Text, FlatList, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { Container, Header, Content, Item, Input, Icon, Spinner } from 'native-base';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { Container, Item, Input, Icon, Spinner } from 'native-base';
 import axios from 'axios';
 import env from 'react-native-config'
 
 
 
-const Movie = ({ navigation, data, name }) => (
+const Movie = ({ navigation, data }) => (
   <TouchableOpacity style={styles.movie} onPress={() => navigation.navigate('Detail', data)}>
     <Image style={{ height: 132, width: 99 }} source={{uri: data.attributes.posterImage.small}} />
   </TouchableOpacity>
@@ -33,9 +33,9 @@ function Section ({ navigation, title, movies }) {
 
 function HomeScreen({ navigation }) {
 
-  let [searchTerm, setSearchTerm] = React.useState('');
-  let [loadingData, setLoadingData] = React.useState(false);
-  let [responseData, setResponseData] = React.useState([]);
+  let [searchTerm, setSearchTerm] = useState('');
+  let [loadingData, setLoadingData] = useState(false);
+  let [responseData, setResponseData] = useState([]);
 
   const getUrl = (searchTerm = null) => {
     let URL = `${env.BASE_URL}/anime?filter%5Btext%5D=${searchTerm}`
@@ -47,34 +47,44 @@ function HomeScreen({ navigation }) {
     return (await axios.get(URL)).data
   }
 
-  const fetchData = React.useCallback(async (searchTerm=null) => {
+  const fetchData = useCallback(async (searchTerm=null) => {
     setLoadingData(true)
     const formattedResponse = []
     let URL = getUrl(searchTerm)
 
     for (let i = 0; i < 5; i++) {
-      let section = await getSection(URL)
-      formattedResponse.push({
-        id: `section${formattedResponse.length + 1}`,
-        name: null,
-        movies: section.data 
-      })
-      URL = section.links.next
-      if (!URL) break;
+      try{
+        let section = await getSection(URL)
+        formattedResponse.push({
+          id: `section${formattedResponse.length + 1}`,
+          name: null,
+          movies: section.data 
+        })
+        URL = section.links.next
+        if (!URL) break;
+      }catch(err){
+        Toast.show({
+          text: "Some data was not found",
+          duration: 3000,
+          buttonText: "CLOSE",
+          type: "warning",
+          useNativeDriver: true
+        })
+      }
     }
 
     setResponseData(formattedResponse)
     setLoadingData(false)
   }, [])
 
-  const fetchInitialData = React.useCallback(() => {
+  const fetchInitialData = useCallback(() => {
     setLoadingData(true)
     let genreList = []
     const formattedResponse = []
     axios.get(`${env.BASE_URL}/categories`).then(async (response) => {
-      try {
-        genreList = response.data.data
-        for (let i = 0; i < genreList.length; i++) {
+      genreList = response.data.data
+      for (let i = 0; i < genreList.length; i++) {
+        try{
           let url = `${env.BASE_URL}/anime?filter%5Bcategories%5D=${genreList[i].attributes.slug}`
           let section = await axios.get(url)
           formattedResponse.push({
@@ -82,16 +92,30 @@ function HomeScreen({ navigation }) {
             name: genreList[i].attributes.title,
             movies: section.data.data
           })
+        }catch(err){
+          console.log(err)
+          showAlert()
         }
-        setResponseData(formattedResponse)
-        setLoadingData(false)
-      } catch(err) {
-        console.log(err)
       }
+      setResponseData(formattedResponse)
+      setLoadingData(false)
+    }).catch(err => {
+      console.log(err)
+      showAlert()
     })
   }, [])
 
-  React.useEffect(() => {
+  const showAlert = () => {
+    Toast.show({
+      text: "Error while fetching data",
+      duration: 3000,
+      buttonText: "CLOSE",
+      type: "warning",
+      useNativeDriver: true
+    })
+  }
+
+  useEffect(() => {
       fetchInitialData();
   }, [])
 
