@@ -1,10 +1,34 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, Linking } from "react-native";
+import { View, Text, StyleSheet, Image, ScrollView, Linking, FlatList } from "react-native";
 import { Icon, Spinner, Toast } from "native-base";
 import axios from "axios"
 import moment from "moment"
 import env from "react-native-config"
 
+
+const Character = ({ data }) => (
+  <View style={{ marginRight: 30, flexDirection: 'column', maxWidth: 150 }}>
+    <Image style={{ height: 200, width: 150 }} source={{uri: data.image.original}} />
+    <Text style={{...styles.text}}>{ data.name || "Unavailable" }</Text>
+  </View>
+);
+
+
+function Characters ({ characters }) { 
+  const renderCharacter = ({ item }) => (
+    <Character data={item} />
+  );
+  return (
+    <View style={styles.characters}>
+      <FlatList
+        horizontal
+        data={characters}
+        renderItem={renderCharacter}
+        keyExtractor={item => item.malId}
+      />
+    </View>
+  );
+}
 
 
 function DetailScreen({ route }) {
@@ -57,8 +81,7 @@ function DetailScreen({ route }) {
         text: "Some data was not found",
         duration: 3000,
         buttonText: "CLOSE",
-        type: "warning",
-        useNativeDriver: true
+        type: "warning"
       })
     }
     return formattedResources
@@ -74,6 +97,7 @@ function DetailScreen({ route }) {
     })
     fetchCharacters().then((formattedCharacters) => {
       if (mounted) {
+        console.log(formattedCharacters)
         setCharacters(formattedCharacters)
         setCharactersLoaded(true)
       }
@@ -147,14 +171,10 @@ function DetailScreen({ route }) {
             }
 
             { charactersLoaded ?
-              <View>
-                {characters.length > 0 &&
-                <Text style={{...styles.title, marginVertical: 20}}>Characters</Text>
-                }
-                { characters.map(char => {
-                    return <Text style={styles.text} key={char.slug}>{char.name}</Text>
-                })}
-              </View>
+            <View>
+              <Text style={{...styles.title, marginVertical: 20}}>Characters</Text>
+              <Characters characters={characters.filter(char => char.image != null)} />
+            </View>
             :
               <Spinner color="white" />
             }
@@ -238,7 +258,10 @@ const styles = StyleSheet.create({
     marginRight: 16,
     height: 132,
     width: 99,
-  }
+  },
+  characters: {
+    marginVertical: 8,
+  },
 });
 
 
