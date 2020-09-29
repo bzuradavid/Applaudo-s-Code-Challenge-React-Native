@@ -47,19 +47,19 @@ function DetailScreen({ route }) {
 
   const getResourceDetails = async (resourceList, URL) => {
     let formattedResources = []
-    for (let i = 0; i < resourceList.length; i++) {
-      try{
+    try{
+      for (let i = 0; i < resourceList.length; i++) {
         let item = await axios.get(URL + resourceList[i].id)
         formattedResources.push(item.data.data.attributes)
-      }catch(err){
-        Toast.show({
-          text: "Some data was not found",
-          duration: 3000,
-          buttonText: "CLOSE",
-          type: "warning",
-          useNativeDriver: true
-        })
       }
+    }catch(err){
+      Toast.show({
+        text: "Some data was not found",
+        duration: 3000,
+        buttonText: "CLOSE",
+        type: "warning",
+        useNativeDriver: true
+      })
     }
     return formattedResources
   }

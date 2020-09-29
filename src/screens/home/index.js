@@ -52,8 +52,8 @@ function HomeScreen({ navigation }) {
     const formattedResponse = []
     let URL = getUrl(searchTerm)
 
-    for (let i = 0; i < 5; i++) {
-      try{
+    try{
+      for (let i = 0; i < 5; i++) {
         let section = await getSection(URL)
         formattedResponse.push({
           id: `section${formattedResponse.length + 1}`,
@@ -62,15 +62,10 @@ function HomeScreen({ navigation }) {
         })
         URL = section.links.next
         if (!URL) break;
-      }catch(err){
-        Toast.show({
-          text: "Some data was not found",
-          duration: 3000,
-          buttonText: "CLOSE",
-          type: "warning",
-          useNativeDriver: true
-        })
       }
+    }catch(err){
+      console.log(err);
+      showAlert()
     }
 
     setResponseData(formattedResponse)
@@ -83,8 +78,8 @@ function HomeScreen({ navigation }) {
     const formattedResponse = []
     axios.get(`${env.BASE_URL}/categories`).then(async (response) => {
       genreList = response.data.data
-      for (let i = 0; i < genreList.length; i++) {
-        try{
+      try{
+        for (let i = 0; i < genreList.length; i++) {
           let url = `${env.BASE_URL}/anime?filter%5Bcategories%5D=${genreList[i].attributes.slug}`
           let section = await axios.get(url)
           formattedResponse.push({
@@ -92,10 +87,10 @@ function HomeScreen({ navigation }) {
             name: genreList[i].attributes.title,
             movies: section.data.data
           })
-        }catch(err){
-          console.log(err)
-          showAlert()
         }
+      }catch(err){
+        console.log(err)
+        showAlert()
       }
       setResponseData(formattedResponse)
       setLoadingData(false)
