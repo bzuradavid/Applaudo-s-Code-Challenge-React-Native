@@ -24,7 +24,7 @@ function Characters ({ characters }) {
         horizontal
         data={characters}
         renderItem={renderCharacter}
-        keyExtractor={item => item.malId}
+        keyExtractor={item => item.malId.toString()}
       />
     </View>
   );
